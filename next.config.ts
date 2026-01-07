@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // ISR revalidation для блога
+  experimental: {
+    // Оптимизация для production
+  },
 };
 
 export default nextConfig;

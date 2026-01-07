@@ -1,36 +1,137 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Blog Platform
+
+Production-ready AI-powered blog platform built with Next.js, TypeScript, Supabase, and OpenAI.
+
+## Tech Stack
+
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Server Actions**
+- **Supabase** (PostgreSQL)
+- **OpenAI** (server-side only)
+- **Tailwind CSS**
+- **Vercel** (deployment)
+
+## Features
+
+- 🚀 **SSG + ISR** for optimal performance
+- 🔐 **Cookie-based admin authentication**
+- 🛡️ **Middleware protection** for admin routes
+- ✍️ **CRUD operations** for blog posts
+- 🤖 **AI features**: generate excerpt, rewrite content, SEO title optimization
+- 📱 **Responsive design** with Tailwind CSS
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Set Up Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# OpenAI
+OPENAI_API_KEY=your_openai_api_key
+
+# Admin Authentication
+ADMIN_PASSWORD=your_secure_admin_password
+```
+
+### 3. Set Up Supabase Database
+
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. Run the migration file located at `supabase/migrations/001_initial_schema.sql` in your Supabase SQL editor
+3. Copy your project URL and anon key to `.env.local`
+
+### 4. Get OpenAI API Key
+
+1. Sign up at [platform.openai.com](https://platform.openai.com)
+2. Create an API key
+3. Add it to `.env.local`
+
+### 5. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the blog.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Access the admin panel at [http://localhost:3000/admin](http://localhost:3000/admin) (you'll be redirected to login).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+├── app/
+│   ├── actions/          # Server Actions
+│   │   ├── auth.ts      # Authentication actions
+│   │   ├── posts.ts     # Blog post CRUD
+│   │   └── ai.ts        # AI-powered features
+│   ├── admin/           # Admin panel
+│   │   ├── layout.tsx   # Admin layout with navigation
+│   │   ├── login/       # Login page
+│   │   └── page.tsx     # Admin dashboard
+│   ├── blog/            # Public blog pages
+│   │   └── [slug]/      # Individual post pages
+│   ├── layout.tsx       # Root layout
+│   └── page.tsx         # Home page (blog listing)
+├── lib/
+│   ├── supabase/        # Supabase client (server-only)
+│   ├── openai/          # OpenAI client (server-only)
+│   └── auth.ts          # Authentication utilities
+├── middleware.ts        # Route protection middleware
+├── types/               # TypeScript types
+└── supabase/
+    └── migrations/      # Database migrations
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Security
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- ✅ Admin authentication via secure httpOnly cookies
+- ✅ Middleware protection for all `/admin/*` routes
+- ✅ Server-side only API keys (never exposed to client)
+- ✅ Row Level Security (RLS) enabled in Supabase
+- ✅ Server Actions for all data mutations
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## AI Features
 
-## Deploy on Vercel
+The platform includes three AI-powered features accessible from the admin panel:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Generate Excerpt** - Automatically creates engaging post excerpts
+2. **Generate SEO Title** - Optimizes titles for search engines
+3. **Rewrite Content** - Rewrites content based on your instructions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All AI features use OpenAI's `gpt-4o-mini` model and are server-side only.
+
+## Deployment
+
+### Deploy to Vercel
+
+1. Push your code to GitHub
+2. Import the project in [Vercel](https://vercel.com)
+3. Add all environment variables in Vercel dashboard
+4. Deploy!
+
+The platform is optimized for Vercel with:
+- Automatic ISR (Incremental Static Regeneration)
+- Edge-ready middleware
+- Optimized builds
+
+## Development Guidelines
+
+- **Server vs Client**: Always use Server Components by default. Mark with `'use client'` only when needed.
+- **API Keys**: Never use OpenAI or Supabase in client components. Always use Server Actions.
+- **Authentication**: Admin auth is cookie-based and server-only.
+- **Type Safety**: Use TypeScript types from `types/database.ts` for database operations.
+
+## License
+
+MIT
