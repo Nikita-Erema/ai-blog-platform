@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getPosts } from '@/app/actions/posts';
 import DeleteButton from './DeleteButton';
+import { formatDate } from '@/lib/date';
 
 export default async function PostsPage() {
   const posts = await getPosts();
@@ -22,7 +23,7 @@ export default async function PostsPage() {
           <p className="text-gray-600">No posts yet.</p>
           <Link
             href="/admin/posts/new"
-            className="mt-4 inline-block text-blue-600 hover:text-blue-800"
+            className="mt-4 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
           >
             Create your first post
           </Link>
@@ -67,12 +68,12 @@ export default async function PostsPage() {
                       )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                      {new Date(post.created_at).toLocaleDateString()}
+                      {formatDate(post.created_at)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                       <Link
                         href={`/admin/posts/${post.id}/edit`}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="mr-4 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
                       >
                         Edit
                       </Link>

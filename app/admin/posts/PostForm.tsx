@@ -2,7 +2,7 @@
 
 import { useTransition, useState } from 'react';
 import type { Post } from '@/app/actions/posts';
-import { generateExcerptAction, rewritePostAction, generatePostContentAction } from '@/app/actions/ai';
+import { generateExcerptAction, rewritePostAction, generatePostContentAction, generateSeoAction } from '@/app/actions/ai';
 
 interface PostFormProps {
   initialData?: Post;
@@ -14,8 +14,11 @@ export default function PostForm({ initialData, action }: PostFormProps) {
   const [isGeneratingExcerpt, setIsGeneratingExcerpt] = useState(false);
   const [isRewriting, setIsRewriting] = useState(false);
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || '');
   const [content, setContent] = useState(initialData?.content || '');
+  const [seoTitle, setSeoTitle] = useState(initialData?.seo_title || '');
+  const [seoDescription, setSeoDescription] = useState(initialData?.seo_description || '');
   
   const isEditMode = !!initialData;
   const isContentEmpty = !content || !content.trim();
@@ -97,6 +100,73 @@ export default function PostForm({ initialData, action }: PostFormProps) {
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
         </div>
+      )}
+
+      {initialData && (
+        <>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="seo_title" className="block text-sm font-medium text-gray-700">
+                SEO Title
+              </label>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!initialData) return;
+                  const contentInput = document.getElementById('content') as HTMLTextAreaElement;
+                  const currentContent = contentInput?.value || content || initialData.content;
+                  
+                  if (!currentContent || !currentContent.trim()) {
+                    alert('Content is required to generate SEO');
+                    return;
+                  }
+                  
+                  setIsGeneratingSeo(true);
+                  try {
+                    const titleInput = document.getElementById('title') as HTMLInputElement;
+                    const title = titleInput?.value || initialData.title;
+                    const result = await generateSeoAction(initialData.id, title, currentContent);
+                    setSeoTitle(result.seo_title);
+                    setSeoDescription(result.seo_description);
+                  } catch (error) {
+                    alert(error instanceof Error ? error.message : 'Failed to generate SEO');
+                  } finally {
+                    setIsGeneratingSeo(false);
+                  }
+                }}
+                disabled={isGeneratingSeo || isPending || isContentEmpty}
+                className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+              >
+                {isGeneratingSeo ? 'Generating...' : 'Generate SEO with AI'}
+              </button>
+            </div>
+            <input
+              type="text"
+              id="seo_title"
+              name="seo_title"
+              value={seoTitle}
+              onChange={(e) => setSeoTitle(e.target.value)}
+              disabled={isPending}
+              maxLength={60}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+          <div>
+            <label htmlFor="seo_description" className="block text-sm font-medium text-gray-700 mb-2">
+              SEO Description
+            </label>
+            <textarea
+              id="seo_description"
+              name="seo_description"
+              rows={3}
+              value={seoDescription}
+              onChange={(e) => setSeoDescription(e.target.value)}
+              disabled={isPending}
+              maxLength={160}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+        </>
       )}
 
       <div>

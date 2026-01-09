@@ -62,7 +62,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="text-center">
           <Link
             href="/"
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
           >
             ← Back to Home
           </Link>

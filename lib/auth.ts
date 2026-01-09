@@ -29,7 +29,9 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
   if (!ADMIN_PASSWORD) {
-    console.error('ADMIN_PASSWORD is not set in environment variables');
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ADMIN_PASSWORD is not set in environment variables');
+    }
     throw new Error('ADMIN_PASSWORD not configured');
   }
 

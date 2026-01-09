@@ -26,8 +26,9 @@ export async function loginAction(formData: FormData) {
   try {
     isValid = await verifyAdminPassword(password);
   } catch (error) {
-    // Если ADMIN_PASSWORD не настроен
-    console.error('Auth error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Auth error:', error);
+    }
     redirect(buildLoginUrl(redirectTo, 'config_error'));
   }
 

@@ -6,16 +6,16 @@ export default function NotFound() {
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900">404</h1>
         <p className="mt-4 text-lg text-gray-600">Page not found</p>
-        <div className="mt-6 flex justify-center gap-4">
+        <div className="mt-6 flex justify-center gap-3">
           <Link
             href="/"
-            className="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
           >
             Go back home
           </Link>
           <Link
             href="/blog"
-            className="inline-block rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
           >
             View Blog
           </Link>
