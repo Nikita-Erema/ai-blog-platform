@@ -29,10 +29,10 @@ CREATE POLICY "Public can view published posts"
   FOR SELECT
   USING (published = true);
 
--- Policy: Allow authenticated admin users to do everything
--- Note: In production, you should implement proper authentication
--- For now, this is a placeholder - you'll need to adjust based on your auth setup
-CREATE POLICY "Admin can manage all posts"
+-- Policy: Allow all operations (admin auth is handled by Next.js middleware)
+-- Since we use cookie-based auth in Next.js, not Supabase auth,
+-- we need to allow all operations here. The middleware protects admin routes.
+CREATE POLICY "Allow all operations"
   ON posts
   FOR ALL
   USING (true)

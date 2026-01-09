@@ -22,8 +22,6 @@ function getSupabaseClient(): SupabaseClient {
 }
 
 // Ленивая инициализация через Proxy - проверка переменных только при использовании
-// Это позволяет приложению запускаться даже без настроенных переменных окружения
-// Ошибка возникнет только при попытке использовать Supabase
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop, receiver) {
     const client = getSupabaseClient();

@@ -22,6 +22,12 @@ export default function AdminLayout({
                   Dashboard
                 </Link>
                 <Link
+                  href="/admin/posts"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Posts
+                </Link>
+                <Link
                   href="/"
                   className="text-gray-600 hover:text-gray-900"
                 >

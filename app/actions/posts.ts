@@ -2,7 +2,9 @@
 
 import { supabase } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { checkAdminAuth } from '@/lib/auth';
+import { generateSlug } from '@/lib/slug';
 
 export interface Post {
   id: string;
@@ -23,8 +25,33 @@ async function ensureAuth() {
   }
 }
 
+// Получить статистику постов (только для админа)
+export async function getPostStats(): Promise<{
+  total: number;
+  published: number;
+  drafts: number;
+}> {
+  await ensureAuth();
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select('published');
+
+  if (error) {
+    throw new Error(`Failed to fetch post stats: ${error.message}`);
+  }
+
+  const total = data?.length || 0;
+  const published = data?.filter((p) => p.published).length || 0;
+  const drafts = total - published;
+
+  return { total, published, drafts };
+}
+
 // Получить все посты (только для админа)
 export async function getPosts(): Promise<Post[]> {
+  await ensureAuth();
+
   const { data, error } = await supabase
     .from('posts')
     .select('*')
@@ -53,21 +80,171 @@ export async function getPublishedPosts(): Promise<Post[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const normalizedSlug = generateSlug(slug);
   const { data, error } = await supabase
     .from('posts')
     .select('*')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('published', true)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    if (error.code === 'PGRST116') {
+    throw new Error(`Failed to fetch post: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  if (!data.published) {
+    return null;
+  }
+
+  return data;
+}
+
+export async function getPostById(id: string): Promise<Post | null> {
+  await ensureAuth();
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    if (error.message?.includes('invalid input syntax for type uuid') || error.code === '22P02') {
       return null;
     }
     throw new Error(`Failed to fetch post: ${error.message}`);
   }
 
-  return data;
+  return data || null;
+}
+
+export async function createPostAction(formData: FormData) {
+  await ensureAuth();
+
+  const title = formData.get('title') as string;
+  const content = (formData.get('content') as string) || '';
+  const slugInput = (formData.get('slug') as string) || '';
+  const published = formData.get('published') === 'on';
+
+  if (!title || !title.trim()) {
+    redirect('/admin/posts/new?error=title_required');
+  }
+
+  const slug = slugInput.trim() ? generateSlug(slugInput) : generateSlug(title);
+
+  const { data: existingPost } = await supabase
+    .from('posts')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (existingPost) {
+    redirect('/admin/posts/new?error=slug_exists');
+  }
+
+  const insertData = {
+    title: title.trim(),
+    slug,
+    content: content.trim() || '',
+    excerpt: '',
+    seo_title: title.trim(),
+    published,
+  };
+
+  console.log('Creating post with data:', { ...insertData, content: insertData.content.substring(0, 50) + '...' });
+
+  const { data, error } = await supabase
+    .from('posts')
+    .insert(insertData)
+    .select();
+
+  if (error) {
+    console.error('Error creating post:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    redirect(`/admin/posts/new?error=create_failed&message=${encodeURIComponent(error.message)}`);
+  }
+
+  console.log('Post created successfully:', data?.[0]?.id);
+
+  if (!data || data.length === 0) {
+    console.error('Post created but no data returned');
+    redirect('/admin/posts/new?error=create_failed&message=Post created but not found');
+  }
+
+  revalidatePath('/admin/posts');
+  redirect('/admin/posts');
+}
+
+export async function updatePostAction(id: string, formData: FormData) {
+  await ensureAuth();
+
+  const title = formData.get('title') as string;
+  const slug = formData.get('slug') as string;
+  const content = formData.get('content') as string;
+  const published = formData.get('published') === 'on';
+
+  if (!title || !title.trim()) {
+    redirect(`/admin/posts/${id}/edit?error=title_required`);
+  }
+
+  if (!slug || !slug.trim()) {
+    redirect(`/admin/posts/${id}/edit?error=slug_required`);
+  }
+
+  if (!content || !content.trim()) {
+    redirect(`/admin/posts/${id}/edit?error=content_required`);
+  }
+
+  const normalizedSlug = generateSlug(slug);
+
+  const { data: currentPost } = await supabase
+    .from('posts')
+    .select('slug')
+    .eq('id', id)
+    .single();
+
+  if (currentPost && currentPost.slug !== normalizedSlug) {
+    const { data: existingPost } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('slug', normalizedSlug)
+      .neq('id', id)
+      .maybeSingle();
+
+    if (existingPost) {
+      redirect(`/admin/posts/${id}/edit?error=slug_exists`);
+    }
+  }
+
+  const excerpt = (formData.get('excerpt') as string) || '';
+
+  const { error } = await supabase
+    .from('posts')
+    .update({
+      title: title.trim(),
+      slug: normalizedSlug,
+      content: content.trim(),
+      excerpt: excerpt.trim(),
+      updated_at: new Date().toISOString(),
+      published,
+    })
+    .eq('id', id);
+
+  if (error) {
+    redirect(`/admin/posts/${id}/edit?error=update_failed&message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath('/admin/posts');
+  redirect('/admin/posts');
 }
 
 export async function createPost(formData: FormData) {
@@ -83,10 +260,7 @@ export async function createPost(formData: FormData) {
     return { error: 'Title and content are required' };
   }
 
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+  const slug = generateSlug(title);
 
   const { data, error } = await supabase
     .from('posts')
@@ -123,10 +297,7 @@ export async function updatePost(id: string, formData: FormData) {
     return { error: 'Title and content are required' };
   }
 
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+  const slug = generateSlug(title);
 
   const { data, error } = await supabase
     .from('posts')
@@ -152,16 +323,24 @@ export async function updatePost(id: string, formData: FormData) {
   return { success: true, data };
 }
 
-export async function deletePost(id: string) {
+export async function deletePostAction(id: string) {
   await ensureAuth();
 
-  const { error } = await supabase.from('posts').delete().eq('id', id);
+  const { data, error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', id)
+    .select();
 
   if (error) {
-    return { error: `Failed to delete post: ${error.message}` };
+    throw new Error(`Failed to delete post: ${error.message}`);
   }
 
+  if (!data || data.length === 0) {
+    throw new Error('Post not found');
+  }
+
+  revalidatePath('/admin/posts');
   revalidatePath('/');
-  return { success: true };
 }
 

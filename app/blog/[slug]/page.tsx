@@ -1,45 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-// Mock data для демонстрации
-const mockPosts: Record<string, { title: string; content: string; date: string }> = {
-  'getting-started-with-nextjs': {
-    title: 'Getting Started with Next.js',
-    content: `
-      <p>Next.js is a React framework that enables you to build full-stack web applications.</p>
-      <p>In this post, we'll explore the basics of Next.js and how to get started with your first project.</p>
-      <h2>Installation</h2>
-      <p>To create a new Next.js app, run:</p>
-      <pre><code>npx create-next-app@latest</code></pre>
-      <p>This will set up everything you need to start building your application.</p>
-    `,
-    date: '2024-01-15',
-  },
-  'introduction-to-typescript': {
-    title: 'Introduction to TypeScript',
-    content: `
-      <p>TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.</p>
-      <p>It adds static type definitions to JavaScript, which helps catch errors early in development.</p>
-      <h2>Why TypeScript?</h2>
-      <p>TypeScript provides better tooling, improved code quality, and enhanced developer experience.</p>
-    `,
-    date: '2024-01-10',
-  },
-  'tailwind-css-best-practices': {
-    title: 'Tailwind CSS Best Practices',
-    content: `
-      <p>Tailwind CSS is a utility-first CSS framework that allows you to build custom designs quickly.</p>
-      <h2>Best Practices</h2>
-      <ul>
-        <li>Use consistent spacing and sizing</li>
-        <li>Extract common patterns into components</li>
-        <li>Use the @apply directive sparingly</li>
-        <li>Keep your utility classes organized</li>
-      </ul>
-    `,
-    date: '2024-01-05',
-  },
-};
+import { getPostBySlug } from '@/app/actions/posts';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -47,7 +8,7 @@ interface PageProps {
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = mockPosts[slug];
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -87,8 +48,11 @@ export default async function BlogPostPage({ params }: PageProps) {
             ← Back to Blog
           </Link>
           <h1 className="text-4xl font-bold text-gray-900">{post.title}</h1>
+          {post.excerpt && (
+            <p className="mt-4 text-xl text-gray-600">{post.excerpt}</p>
+          )}
           <p className="mt-4 text-sm text-gray-500">
-            {new Date(post.date).toLocaleDateString('en-US', {
+            {new Date(post.created_at).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',

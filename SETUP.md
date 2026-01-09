@@ -5,8 +5,8 @@
 - [ ] Install dependencies: `npm install`
 - [ ] Create `.env.local` file with required variables
 - [ ] Set up Supabase project and run migration
-- [ ] Get OpenAI API key
 - [ ] Set admin password in `.env.local`
+- [ ] (Optional) Get OpenAI API key for AI features
 - [ ] Run `npm run dev`
 
 ## Detailed Setup
@@ -23,7 +23,9 @@
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - anon/public key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-### 2. OpenAI Setup
+### 2. OpenAI Setup (Optional)
+
+OpenAI is only required for AI-powered features (generate excerpt, rewrite content, SEO title). The basic blog functionality works without it.
 
 1. Go to [platform.openai.com](https://platform.openai.com)
 2. Sign up or log in
@@ -48,14 +50,14 @@ This password will be required to access `/admin/*` routes.
 Create `.env.local`:
 
 ```env
-# Supabase Configuration
+# Supabase Configuration (Required)
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# OpenAI Configuration
+# OpenAI Configuration (Optional - only for AI features)
 OPENAI_API_KEY=sk-...
 
-# Admin Authentication
+# Admin Authentication (Required)
 ADMIN_PASSWORD=change_this_to_a_secure_password
 ```
 

@@ -39,7 +39,7 @@ export default function Home() {
             >
               View Blog Posts
             </Link>
-          </div>
+        </div>
         </div>
       </main>
     </div>

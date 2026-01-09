@@ -1,10 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { removeAdminAuth, verifyAdminPassword } from '@/lib/auth';
-
-const ADMIN_COOKIE_NAME = 'admin-auth';
+import { setAdminAuth, removeAdminAuth, verifyAdminPassword } from '@/lib/auth';
 
 function buildLoginUrl(redirectTo: string | null, error: string): string {
   const params = new URLSearchParams();
@@ -39,15 +36,8 @@ export async function loginAction(formData: FormData) {
     redirect(buildLoginUrl(redirectTo, 'invalid_password'));
   }
 
-  // Установка cookie напрямую в Server Action
-  const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE_NAME, 'authenticated', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 дней
-    path: '/',
-  });
+  // Установка cookie через функцию
+  await setAdminAuth();
 
   // Redirect после установки cookie
   redirect(redirectTo || '/admin');

@@ -34,14 +34,14 @@ npm install
 Create a `.env.local` file in the root directory:
 
 ```env
-# Supabase
+# Supabase (Required)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# OpenAI
+# OpenAI (Optional - only for AI features)
 OPENAI_API_KEY=your_openai_api_key
 
-# Admin Authentication
+# Admin Authentication (Required)
 ADMIN_PASSWORD=your_secure_admin_password
 ```
 
@@ -51,7 +51,9 @@ ADMIN_PASSWORD=your_secure_admin_password
 2. Run the migration file located at `supabase/migrations/001_initial_schema.sql` in your Supabase SQL editor
 3. Copy your project URL and anon key to `.env.local`
 
-### 4. Get OpenAI API Key
+### 4. Get OpenAI API Key (Optional)
+
+OpenAI is only required for AI-powered features. The basic blog functionality works without it.
 
 1. Sign up at [platform.openai.com](https://platform.openai.com)
 2. Create an API key

@@ -1,38 +1,59 @@
-import OpenAI from 'openai';
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
 
-let openaiClient: OpenAI | null = null;
+interface ChatCompletionOptions {
+  model: string;
+  messages: ChatMessage[];
+  max_tokens?: number;
+  temperature?: number;
+}
 
-function getOpenAIClient(): OpenAI {
-  if (openaiClient) {
-    return openaiClient;
-  }
+interface ChatCompletionResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
 
-  const apiKey = process.env.OPENAI_API_KEY;
+async function createChatCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
     throw new Error(
-      'Missing OPENAI_API_KEY environment variable. Please set OPENAI_API_KEY in your .env.local file. See SETUP.md for instructions.'
+      'Missing OPENROUTER_API_KEY environment variable. Please set OPENROUTER_API_KEY in your .env.local file. See SETUP.md for instructions.'
     );
   }
 
-  openaiClient = new OpenAI({
-    apiKey,
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: options.model,
+      messages: options.messages,
+      max_tokens: options.max_tokens,
+      temperature: options.temperature,
+    }),
   });
-  return openaiClient;
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  return response.json();
 }
 
-// Ленивая инициализация через Proxy - проверка переменных только при использовании
-// Это позволяет приложению запускаться даже без настроенных переменных окружения
-// Ошибка возникнет только при попытке использовать OpenAI
-export const openai = new Proxy({} as OpenAI, {
-  get(_target, prop, receiver) {
-    const client = getOpenAIClient();
-    const value = Reflect.get(client, prop, receiver);
-    // Если это функция, привязываем контекст
-    if (typeof value === 'function') {
-      return value.bind(client);
-    }
-    return value;
+export const openai = {
+  chat: {
+    completions: {
+      create: createChatCompletion,
+    },
   },
-});
+};
 
