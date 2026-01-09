@@ -26,8 +26,9 @@ export async function loginAction(formData: FormData) {
   try {
     isValid = await verifyAdminPassword(password);
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Auth error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
+      console.error('Auth error:', errorMessage);
     }
     redirect(buildLoginUrl(redirectTo, 'config_error'));
   }
@@ -38,7 +39,15 @@ export async function loginAction(formData: FormData) {
   }
 
   // Установка cookie через функцию
-  await setAdminAuth();
+  try {
+    await setAdminAuth();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
+      console.error('Error setting auth cookie:', errorMessage);
+    }
+    redirect(buildLoginUrl(redirectTo, 'config_error'));
+  }
 
   // Redirect после установки cookie
   redirect(redirectTo || '/admin');

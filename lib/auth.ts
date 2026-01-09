@@ -5,11 +5,14 @@ const ADMIN_COOKIE_NAME = 'admin-auth';
 
 export async function setAdminAuth() {
   const cookieStore = await cookies();
+  // На Vercel всегда используем secure: true (HTTPS)
+  // VERCEL === '1' автоматически устанавливается Vercel
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   cookieStore.set(ADMIN_COOKIE_NAME, 'authenticated', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 дней
+    maxAge: 60 * 60 * 24 * 7,
     path: '/',
   });
 }
@@ -28,13 +31,16 @@ export async function checkAdminAuth(): Promise<boolean> {
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-  if (!ADMIN_PASSWORD) {
-    if (process.env.NODE_ENV === 'development') {
+  if (!ADMIN_PASSWORD || !ADMIN_PASSWORD.trim()) {
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
       console.error('ADMIN_PASSWORD is not set in environment variables');
     }
     throw new Error('ADMIN_PASSWORD not configured');
   }
 
-  return password.trim() === ADMIN_PASSWORD.trim();
+  const trimmedPassword = password?.trim() || '';
+  const trimmedAdminPassword = ADMIN_PASSWORD.trim();
+
+  return trimmedPassword === trimmedAdminPassword;
 }
 
